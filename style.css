@@ -511,3 +511,115 @@ p {
   background: #bbb;
   box-shadow: none;
 }
+
+/* --- ローディングアニメーション（広告の代わり） --- */
+.loader {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #8e8e84;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  animation: spin 1s linear infinite;
+  margin: 10px auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 解禁ボタンを少し目立たせる */
+#unlock-container .btn {
+  background: #ffb74d; /* 少し目立つオレンジ系 */
+  font-weight: bold;
+}
+
+#ad-overlay video {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* --- Amazonバナー用のスタイル --- */
+.banner-ad-container {
+  margin: 10px auto 25px auto;
+  width: 100%;
+  max-width: 340px;
+  text-align: center;
+}
+
+.banner-wrapper.amazon-theme {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  border: 2px solid #232f3e; /* Amazonネイビー */
+  transition: transform 0.2s;
+}
+
+.banner-wrapper:hover {
+  transform: scale(1.02);
+}
+
+.banner-wrapper img {
+  width: 100%;
+  display: block;
+}
+
+/* AmazonオレンジのADバッジ */
+.ad-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: #ff9900; 
+  color: #232f3e;
+  font-weight: bold;
+  font-size: 10px;
+  padding: 2px 8px;
+  border-bottom-left-radius: 8px;
+}
+
+/* style.css の .container 部分を以下に差し替え */
+.container {
+  width: 100%;                 /* スマホでは横幅いっぱい */
+  max-width: 480px;            /* PCで見てもこれ以上は広がらない（スマホサイズ） */
+  height: 100vh;               /* 画面の高さに合わせる */
+  
+  /* 以前の aspect-ratio は削除するか、以下のように調整 */
+  background: #ffffff;
+  box-shadow: 0 10px 35px rgba(0,0,0,0.25);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+
+  overflow-y: auto;            /* 縦に長い時にスクロールできるようにする */
+  position: relative;
+  margin: 0 auto;              /* PCで中央寄せ */
+}
+
+/* 全体背景の設定もスマホで違和感がないように修正 */
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background: #8e8e84; 
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;    /* 上揃えにすることでスクロールしやすく */
+}
+/* 結果画面エリアの調整 */
+.result-area {
+  padding-top: 20px !important; /* 余白を適正に */
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.result-card {
+  width: 90% !important;        /* カードの横幅を少し絞って余白を作る */
+  margin: 0 auto 15px auto !important;
+}s
