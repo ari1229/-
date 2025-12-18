@@ -506,6 +506,7 @@ function prevQuestion() {
 // ------------------------------------------------------------
 // ⭐ 結果表示
 // ------------------------------------------------------------
+// --- showResult関数の中身を以下に差し替え ---
 function showResult() {
   document.querySelector(".question-area").style.display = "none";
   const resultArea = document.getElementById("result");
@@ -532,32 +533,20 @@ function showResult() {
     return;
   }
 
-// 背景色設定（指定のカラーコードへ更新）
+  // 背景色設定
   const typeBgColors = {
-    HAKS: "#ffa3a3", // チーター
-    HAKN: "#ffe0c1", // インコ
-    HAGS: "#ffffd6", // フェレット
-    HAGN: "#ffe0ff", // ネコ
-    HIKS: "#ffdbed", // フェネック
-    HIKN: "#ffffc6", // リス
-    HIGS: "#ffe8d1", // カラス
-    HIGN: "#ffc6c6", // アルパカ
-    CAKS: "#b2ffff", // パンダ
-    CAKN: "#eaffd6", // カメ
-    CAGS: "#c6ffff", // わんこ
-    CAGN: "#eddbff", // ベア
-    CIKS: "#d1ffe8", // ナマケモノ
-    CIKN: "#c6e2ff", // ヒツジ
-    CIGS: "#e5ffff", // ペンギン
-    CIGN: "#eafff4"  // カピバラ
+    HAKS: "#ffa3a3", HAKN: "#ffe0c1", HAGS: "#ffffd6", HAGN: "#ffe0ff",
+    HIKS: "#ffdbed", HIKN: "#ffffc6", HIGS: "#ffe8d1", HIGN: "#ffc6c6",
+    CAKS: "#b2ffff", CAKN: "#eaffd6", CAGS: "#c6ffff", CAGN: "#eddbff",
+    CIKS: "#d1ffe8", CIKN: "#c6e2ff", CIGS: "#e5ffff", CIGN: "#eafff4"
   };
 
   const bgColor = typeBgColors[code] || "#ffffff";
   const container = document.querySelector('.container');
-  // グラデーションではなく単色背景として適用
   container.style.background = bgColor;
   container.style.backgroundImage = "none";
 
+  // 結果のHTML組み立て（グラフ部分を初期状態で非表示に）
   let html = `
     <div class="result-card main-title-card">
       <p>あなたの体感温度タイプは…</p>
@@ -574,7 +563,28 @@ function showResult() {
         ${desc.items.list.map(item => `<li><a href="https://zozo.jp" target="_blank" class="item-link">${item}</a></li>`).join("")}
       </ul>
     </div>
-    <div class="result-card">
+
+    <div class="banner-ad-container">
+      <a href="https://www.amazon.co.jp" target="_blank" class="banner-link">
+        <div class="banner-wrapper amazon-theme">
+          <img src="画像一覧/バナー広告.jpeg" alt="Amazonでチェック" onerror="this.src='https://placehold.jp/24/232f3e/ff9900/300x100.png?text=Amazon%0A今すぐチェック！'">
+          <span class="ad-badge">AD</span>
+        </div>
+      </a>
+      <p style="font-size: 10px; color: #888; margin-top: 4px;">Amazonで関連アイテムをチェックする</p>
+    </div>
+
+    <div id="unlock-container" class="result-card" style="text-align:center;">
+      <p style="margin-bottom:15px;">詳しい分析データが見たい方はこちら</p>
+      <button class="btn" onclick="unlockGraph()">広告を見てグラフを表示</button>
+    </div>
+
+    <div id="ad-overlay" style="display:none; text-align:center; padding:20px;" class="result-card">
+       <div class="loader"></div>
+       <p>詳細データを読み込み中...<br><span style="font-size:12px;">（数秒で完了します）</span></p>
+    </div>
+
+    <div id="graph-area" style="display:none;" class="result-card">
       <h3>■あなたの傾向グラフ</h3>
       <div class="analysis-charts" style="background: transparent; padding: 0; border: none;">
         ${renderBar("暑がり", "寒がり", p[0])}
@@ -583,13 +593,120 @@ function showResult() {
         ${renderBar("計画派", "気分派", p[3])}
       </div>
     </div>
+
+    <div class="share-container" style="margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px;">
+      <p style="font-size: 14px; margin-bottom: 10px;">結果を友達に教える</p>
+      <div style="display: flex; gap: 10px; justify-content: center;">
+        <button class="btn share-x" onclick="shareX('${desc.title}')">Xでポスト</button>
+        <button class="btn share-line" onclick="shareLine('${desc.title}')">LINEで送る</button>
+      </div>
+    </div>
     <div style="height: 50px;"></div>
   `;
   resultArea.innerHTML = html;
 }
 
+// --- showResult関数より下を以下に差し替え ---
+
+// ⭐ 広告を見てグラフを表示する関数
+function unlockGraph() {
+  const unlockBtn = document.getElementById("unlock-container");
+  const adOverlay = document.getElementById("ad-overlay");
+  const graphArea = document.getElementById("graph-area");
+
+  // ボタンを隠してローディング（広告代わり）を表示
+  unlockBtn.style.display = "none";
+  adOverlay.style.display = "block";
+
+  // 3秒後にグラフを表示
+  setTimeout(() => {
+    adOverlay.style.display = "none";
+    graphArea.style.display = "block";
+    // グラフまでスムーズにスクロール
+    graphArea.scrollIntoView({ behavior: 'smooth' });
+  }, 3000); 
+}
+
 // ⭐ 背景色切り替え（中身を空にして固定）
 function updateBackground() {}
+
+// 1. 各軸のスコアから記号（H, C, A...）を判定する関数
+function judgeTemp(arr) {
+  const avg = arr.reduce((a, b) => a + b, 0) / arr.length;
+  return avg < 2 ? "H" : "C"; 
+}
+
+function judgeActive(arr) {
+  const avg = arr.reduce((a, b) => a + b, 0) / arr.length;
+  return avg < 2 ? "A" : "I"; 
+}
+
+function judgeComfort(arr) {
+  const avg = arr.reduce((a, b) => a + b, 0) / arr.length;
+  return avg < 2 ? "K" : "G"; 
+}
+
+function judgeSpeed(arr) {
+  const avg = arr.reduce((a, b) => a + b, 0) / arr.length;
+  return avg < 2 ? "S" : "N"; 
+}
+
+// ⭐ グラフのHTMLを生成する関数
+function renderBar(leftLabel, rightLabel, percent) {
+  const leftPercent = 100 - percent;
+  const rightPercent = percent;
+
+  return `
+    <div class="chart-row">
+      <div class="labels">
+        <span>${leftLabel} (${leftPercent}%)</span>
+        <span>(${rightPercent}%) ${rightLabel}</span>
+      </div>
+      <div class="bar-container">
+        <div class="bar-fill" style="width: ${percent}%;"></div>
+      </div>
+    </div>
+  `;
+}
+// ⭐ 背景色切り替え（中身を空にして固定）
+function unlockGraph() {
+  const unlockBtn = document.getElementById("unlock-container");
+  const adOverlay = document.getElementById("ad-overlay");
+  const graphArea = document.getElementById("graph-area");
+
+  // ボタンを隠して広告表示エリアを出す
+  unlockBtn.style.display = "none";
+  adOverlay.style.display = "block";
+
+  // 広告動画のHTMLを生成（動画パスを指定）
+  // ※パスはご提示いただいたものに合わせていますが、動かない場合は
+  //   動画ファイルをHTMLと同じフォルダに移動して "広告動画.mp4" と記述してください
+  adOverlay.innerHTML = `
+    <p style="margin-bottom:10px; font-weight:bold;">広告再生中...</p>
+    <video id="ad-video" width="100%" style="border-radius:10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);" autoplay muted playsinline>
+      <source src="画像一覧/広告動画.mp4" type="video/mp4">
+      お使いのブラウザは動画再生に対応していません。
+    </video>
+    <p style="font-size:12px; color:#888; margin-top:5px;">動画終了後にグラフが表示されます</p>
+  `;
+
+  const video = document.getElementById("ad-video");
+
+  // 動画が終了した時の処理
+  video.onended = function() {
+    adOverlay.style.display = "none"; // 広告を消す
+    graphArea.style.display = "block"; // グラフを出す
+    graphArea.scrollIntoView({ behavior: 'smooth' }); // グラフへスクロール
+  };
+
+  // 万が一動画が読み込めなかった場合、5秒後に強制的にグラフを出す（エラー対策）
+  video.onerror = function() {
+    setTimeout(() => {
+      adOverlay.style.display = "none";
+      graphArea.style.display = "block";
+    }, 3000);
+  };
+}
 
 // --- 以下を script.js の最後に追加（何も消さなくてOKです） ---
 
@@ -637,4 +754,16 @@ function renderBar(leftLabel, rightLabel, percent) {
 // もし既にある場合は重複しても問題ありません
 if (typeof updateBackground !== 'function') {
   function updateBackground() {}
+}
+
+// --- シェア用関数をscript.jsのどこか（外側）に追加 ---
+function shareX(typeTitle) {
+  const text = encodeURIComponent(`私の体感温度タイプは 【${typeTitle}】 でした！\n#体感温度診断 #チーム4app`);
+  const url = encodeURIComponent(window.location.href);
+  window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, '_blank');
+}
+
+function shareLine(typeTitle) {
+  const text = encodeURIComponent(`私の体感温度タイプは 【${typeTitle}】 でした！\n${window.location.href}`);
+  window.open(`https://social-plugins.line.me/lineit/share?url=${text}`, '_blank');
 }
